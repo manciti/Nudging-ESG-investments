@@ -439,3 +439,4 @@ CATEadv_useful <- lm(inv_sustFund ~ treatment*adv_usefulness, data)
 plot_predictions(CATEadv_useful, by = c("adv_usefulness", "treatment")) + ylab("% Invested in Sustainable Fund") +
   xlab("Advisor Usefulness")
 
+# Test da desktop matteo per provare Github
