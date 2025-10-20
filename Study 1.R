@@ -439,3 +439,82 @@ CATEadv_useful <- lm(inv_sustFund ~ treatment*adv_usefulness, data)
 plot_predictions(CATEadv_useful, by = c("adv_usefulness", "treatment")) + ylab("% Invested in Sustainable Fund") +
   xlab("Advisor Usefulness")
 
+########################## Quantile Treatment Effect ########################################################
+#############################################################################################################
+
+#########QTE dell'effetto del trattamento 
+#q25
+QTE_25 <- rq(inv_sustFund ~ treatment + 
+               age + gender_female + country + income + savings + debt + 
+               education + household + Household_n.Incomes, 
+             tau = 0.25, data = data)
+
+summary(QTE_25)
+#q50
+QTE_50 <- rq(inv_sustFund ~ treatment + 
+               age + gender_female + country + income + savings + debt + 
+               education + household + Household_n.Incomes, 
+             tau = 0.50, data = data)
+
+summary(QTE_50)
+#q75
+QTE_75 <- rq(inv_sustFund ~ treatment + 
+               age + gender_female + country + income + savings + debt + 
+               education + household + Household_n.Incomes, 
+             tau = 0.75, data = data)
+
+summary(QTE_75)
+# I risultati mostrano l'eterogeneità del trattamento, che è significativo a q25 e q75, cioè negli estremi della distribuzione,
+# ma non è significativo nella mediana
+
+#########CQTE dell'interazione del trattamento con la financial literacy
+#q25
+CQTE_FL_25 <- rq(inv_sustFund ~ treatment*fin_literacy + 
+                   age + gender_female + country + income + savings + debt + 
+                   education + household + Household_n.Incomes, 
+                 tau = 0.25, data = data)
+
+summary(CQTE_FL_25)
+#q50
+CQTE_FL_50 <- rq(inv_sustFund ~ treatment*fin_literacy + 
+                   age + gender_female + country + income + savings + debt + 
+                   education + household + Household_n.Incomes, 
+                 tau = 0.50, data = data)
+
+summary(CQTE_FL_50)
+#q75
+CQTE_FL_75 <- rq(inv_sustFund ~ treatment*fin_literacy + 
+                   age + gender_female + country + income + savings + debt + 
+                   education + household + Household_n.Incomes, 
+                 tau = 0.75, data = data)
+
+summary(CQTE_FL_75)
+# i risultati sono complementari al QTE precedente, e mostrano che l'interazione tra treatment e financial literacy 
+# è significativa nella mediana, ma non è significativa negli estremi della distribuzione (q25 e q75).
+
+#########CQTE dell'interazione del trattamento con la sustainable literacy
+#q25
+CQTE_SFL_25 <- rq(inv_sustFund ~ treatment*sust_literacy + 
+                    age + gender_female + country + income + savings + debt + 
+                    education + household + Household_n.Incomes, 
+                  tau = 0.25, data = data)
+
+summary(CQTE_SFL_25)
+#q50
+CQTE_SFL_50 <- rq(inv_sustFund ~ treatment*sust_literacy + 
+                    age + gender_female + country + income + savings + debt + 
+                    education + household + Household_n.Incomes, 
+                  tau = 0.50, data = data)
+
+summary(CQTE_SFL_50)
+#q75
+CQTE_SFL_75 <- rq(inv_sustFund ~ treatment*sust_literacy + 
+                    age + gender_female + country + income + savings + debt + 
+                    education + household + Household_n.Incomes, 
+                  tau = 0.75, data = data)
+
+summary(CQTE_SFL_75)
+# conferma che l'interazione tra il trattamento e sustainable literacy non è mai significativa
+
+########################### Wald test for Treatment Heterogeneity Analysis (??)
+########################### Table and figures (??)
