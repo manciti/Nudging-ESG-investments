@@ -5,3 +5,7 @@
 *.jpeg
 *.docx
 .Rproj.user
+*.html
+*.DS_Store
+
+
