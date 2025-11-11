@@ -12,7 +12,7 @@ library(corrtable)
 library(marginaleffects)
 
 # Setting the working directory
-setwd("C:/Users/mpasq/OneDrive - Università Politecnica delle Marche/Desktop/Dottorato/TESI/Capitolo 2/Analisi R/Directory")
+# setwd("C:/Users/mpasq/OneDrive - Università Politecnica delle Marche/Desktop/Dottorato/TESI/Capitolo 2/Analisi R/Directory")
 
 # import data frame from .csv file
 data <- read.csv("investData.csv")
@@ -49,7 +49,7 @@ data <- data %>%
 data <- data %>%
   relocate(gender_female, .after = gender_fem)
 
-data = select(data, -gender_fem)
+data <- select(data, -gender_fem)
 
 ## Country
 table(data$country)
@@ -71,7 +71,7 @@ data <- data%>%
                              ">5000 EUR" ~ 5))
 data <- data%>%
   relocate (income, .after=income_bracket)
-data = select(data, -income_bracket)
+data <- select(data, -income_bracket)
 
 ## savings
 data <- data %>%
@@ -218,6 +218,7 @@ view(data)
 ################################################################################################
 ########################## PART 3 - T-TEST #####################################################
 ##############################################################################################
+
 datacontrol = subset(data, treatment == 0)
 datatreatment = subset(data, treatment == 1)
 
@@ -281,6 +282,7 @@ save_correlation_matrix(df = data3, filename = 'corrmatrix2.csv', digits = 2, us
 
 ######## Subsitution Effect - measuring correlations ######
 ###########################################################
+
 datainvest <- select(data, 'inv_equityFundX', 'inv_bondFund', 'inv_equityFundY', 'inv_sustFund')
 correlation_matrix(datainvest, digits=2, use = 'lower', show_significance = TRUE, replacement = " ")
 save_correlation_matrix(df = datainvest, filename = 'corrmatrixinvest.csv', digits = 2, use = 'lower',  show_significance = TRUE)
@@ -415,15 +417,16 @@ plot_predictions(CATEPref, by = c("sust_preference", "treatment")) + ylab("% inv
 ########################################################
 ###### PART 7 - MEDIATION EFFECTS  - PROCESS ANALYSIS###
 ########################################################
-process(data=data, y="inv_sustFund",x="fin_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
+# process(data=data, y="inv_sustFund",x="fin_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
 
-process(data=data, y="inv_sustFund",x="sust_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
+# process(data=data, y="inv_sustFund",x="sust_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
 
 ##########################################################
 ################## PART 8 - Perception of the advisor ####
 ##########################################################
 
-# Questa è un'analisi aggiuntiva che ho inserito nel secondo capitolo della tesi e possiamo valutare se inserirla anche nel paper.
+# Additional analysis on the possible interaction between treatment and perception of the advisor
+
 Reg1 <- lm(inv_sustFund ~ treatment + adv_usefulness + adv_usefulness*treatment, data)
 Reg2 <- lm(inv_sustFund ~ treatment + adv_trustworthiness + adv_trustworthiness*treatment, data)
 Reg3 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
@@ -442,79 +445,247 @@ plot_predictions(CATEadv_useful, by = c("adv_usefulness", "treatment")) + ylab("
 ########################## Quantile Treatment Effect ########################################################
 #############################################################################################################
 
-#########QTE dell'effetto del trattamento 
-#q25
-QTE_25 <- rq(inv_sustFund ~ treatment + 
-               age + gender_female + country + income + savings + debt + 
-               education + household + Household_n.Incomes, 
-             tau = 0.25, data = data)
 
-summary(QTE_25)
-#q50
-QTE_50 <- rq(inv_sustFund ~ treatment + 
-               age + gender_female + country + income + savings + debt + 
-               education + household + Household_n.Incomes, 
-             tau = 0.50, data = data)
+#### Loading the relevant library
+library(quantreg)
 
-summary(QTE_50)
-#q75
-QTE_75 <- rq(inv_sustFund ~ treatment + 
-               age + gender_female + country + income + savings + debt + 
-               education + household + Household_n.Incomes, 
-             tau = 0.75, data = data)
+taus <- seq(0.1, 0.9, by = 0.1)
 
-summary(QTE_75)
-# I risultati mostrano l'eterogeneità del trattamento, che è significativo a q25 e q75, cioè negli estremi della distribuzione,
-# ma non è significativo nella mediana
+QTE_full <- rq(inv_sustFund ~ treatment + 
+                 age + gender_female + country + income + savings + debt + 
+                 education + household + Household_n.Incomes, 
+               tau = taus, data = data)
 
-#########CQTE dell'interazione del trattamento con la financial literacy
-#q25
-CQTE_FL_25 <- rq(inv_sustFund ~ treatment*fin_literacy + 
-                   age + gender_female + country + income + savings + debt + 
-                   education + household + Household_n.Incomes, 
-                 tau = 0.25, data = data)
 
-summary(CQTE_FL_25)
-#q50
-CQTE_FL_50 <- rq(inv_sustFund ~ treatment*fin_literacy + 
-                   age + gender_female + country + income + savings + debt + 
-                   education + household + Household_n.Incomes, 
-                 tau = 0.50, data = data)
 
-summary(CQTE_FL_50)
-#q75
-CQTE_FL_75 <- rq(inv_sustFund ~ treatment*fin_literacy + 
-                   age + gender_female + country + income + savings + debt + 
-                   education + household + Household_n.Incomes, 
-                 tau = 0.75, data = data)
+# We visualize the quantile treatment effect across the full quantile range
+plot(summary(QTE_full), parm = "treatment", 
+     main = "Treatment Effect Across Quantiles",
+     ylab = "Treatment Coefficient",
+     xlab = "Quantile")
 
-summary(CQTE_FL_75)
-# i risultati sono complementari al QTE precedente, e mostrano che l'interazione tra treatment e financial literacy 
-# è significativa nella mediana, ma non è significativa negli estremi della distribuzione (q25 e q75).
+# Ensure axis labels are rendered (some plot methods ignore xlab/ylab passed via ...)
+title(xlab = "Quantile", ylab = "Treatment Coefficient")
 
-#########CQTE dell'interazione del trattamento con la sustainable literacy
-#q25
-CQTE_SFL_25 <- rq(inv_sustFund ~ treatment*sust_literacy + 
-                    age + gender_female + country + income + savings + debt + 
-                    education + household + Household_n.Incomes, 
-                  tau = 0.25, data = data)
+# Save the same plot as a high-resolution PNG in the project folder
+png(filename = "QTE_results.png", width = 2000, height = 1400, res = 300)
+plot(summary(QTE_full), parm = "treatment", 
+  main = "Treatment Effect Across Quantiles",
+  ylab = "Treatment Coefficient",
+  xlab = "Quantile")
+title(xlab = "Quantile", ylab = "Treatment Coefficient")
+dev.off()
 
-summary(CQTE_SFL_25)
-#q50
-CQTE_SFL_50 <- rq(inv_sustFund ~ treatment*sust_literacy + 
-                    age + gender_female + country + income + savings + debt + 
-                    education + household + Household_n.Incomes, 
-                  tau = 0.50, data = data)
 
-summary(CQTE_SFL_50)
-#q75
-CQTE_SFL_75 <- rq(inv_sustFund ~ treatment*sust_literacy + 
-                    age + gender_female + country + income + savings + debt + 
-                    education + household + Household_n.Incomes, 
-                  tau = 0.75, data = data)
+########################## Conditional Quantile Treatment Effect (Financial Literacy) #######################
+#############################################################################################################
 
-summary(CQTE_SFL_75)
-# conferma che l'interazione tra il trattamento e sustainable literacy non è mai significativa
+# Create binary financial literacy variable
+data <- data %>%
+  mutate(fin_literacy_binary = case_when(
+    fin_literacy %in% c(0, 1) ~ 0,  # Low literacy
+    fin_literacy %in% c(2, 3) ~ 1,  # High literacy
+    TRUE ~ NA_real_
+  ))
 
-########################### Wald test for Treatment Heterogeneity Analysis (??)
-########################### Table and figures (??)
+# Quantiles and model with interaction
+taus <- seq(0.1, 0.9, by = 0.1)
+
+CQTE_fin_literacy <- rq(inv_sustFund ~ treatment*fin_literacy_binary +
+                  age + gender_female + country + income + savings + debt +
+                  education + household + Household_n.Incomes,
+                tau = taus, data = data)
+
+# Summaries with covariance matrices for confidence intervals
+sfm <- summary(CQTE_fin_literacy, se = "boot", covariance = TRUE, R = 500)
+
+# Build effects for each literacy level
+alpha <- 0.10
+z     <- qnorm(1 - alpha/2)
+levels_fl <- c(0, 1)  # Binary: Low (0) and High (1)
+
+rows <- list()
+for (j in seq_along(taus)) {
+  coefs <- sfm[[j]]$coefficients
+  V     <- sfm[[j]]$cov
+  
+  # Set dimnames if missing
+  if (is.null(dimnames(V))) {
+    dimnames(V) <- list(rownames(coefs), rownames(coefs))
+  }
+  
+  b_treat <- coefs["treatment", 1]
+  b_int   <- coefs["treatment:fin_literacy_binary", 1]
+
+  for (ell in levels_fl) {
+    eff <- b_treat + ell * b_int
+    se2 <- V["treatment","treatment"] +
+           (ell^2) * V["treatment:fin_literacy_binary","treatment:fin_literacy_binary"] +
+           2 * ell * V["treatment","treatment:fin_literacy_binary"]
+    se  <- sqrt(se2)
+    
+    lit_label <- ifelse(ell == 0, "Low", "High")
+    rows[[length(rows) + 1]] <-
+      data.frame(tau = taus[j], fin_literacy = factor(lit_label, levels = c("Low", "High")),
+                 estimate = eff, lo = eff - z*se, hi = eff + z*se)
+  }
+}
+df <- do.call(rbind, rows)
+
+# Plot
+p <- ggplot(df, aes(x = tau, y = estimate, color = fin_literacy, group = fin_literacy)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi, fill = fin_literacy), alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.6) +
+  geom_point(size = 1.6) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(breaks = taus) +
+  labs(title = "Conditional Quantile Treatment Effect by Financial Literacy",
+       x = "Quantile", y = "Treatment effect",
+       color = "Financial literacy", fill = "Financial literacy") +
+  theme_minimal(base_size = 12)
+
+print(p)
+
+# Save as PNG
+ggsave("CQTE_by_finlit.png", p, width = 8, height = 5.6, dpi = 300)
+
+########################## Conditional Quantile Treatment Effect (Sustainable financial knowledge) ##########
+#############################################################################################################
+
+
+# Create binary sustainable literacy variable
+data <- data %>%
+  mutate(sust_literacy_binary = case_when(
+    sust_literacy %in% c(0, 1, 2) ~ 0,  # Low literacy
+    sust_literacy %in% c(3, 4, 5, 6) ~ 1,  # High literacy
+    TRUE ~ NA_real_
+  ))
+
+# Quantiles and model with interaction
+taus <- seq(0.1, 0.9, by = 0.1)
+
+CQTE_sust_lit <- rq(inv_sustFund ~ treatment*sust_literacy_binary +
+                  age + gender_female + country + income + savings + debt +
+                  education + household + Household_n.Incomes,
+                tau = taus, data = data)
+
+# Summaries with covariance matrices for confidence intervals
+sfm <- summary(CQTE_sust_lit, se = "boot", covariance = TRUE, R = 500)
+
+# Build effects for each literacy level
+alpha <- 0.10
+z     <- qnorm(1 - alpha/2)
+levels_sl <- c(0, 1)  # Binary: Low (0) and High (1)
+
+rows <- list()
+for (j in seq_along(taus)) {
+  coefs <- sfm[[j]]$coefficients
+  V     <- sfm[[j]]$cov
+  
+  # Set dimnames if missing
+  if (is.null(dimnames(V))) {
+    dimnames(V) <- list(rownames(coefs), rownames(coefs))
+  }
+  
+  b_treat <- coefs["treatment", 1]
+  b_int   <- coefs["treatment:sust_literacy_binary", 1]
+
+  for (ell in levels_sl) {
+    eff <- b_treat + ell * b_int
+    se2 <- V["treatment","treatment"] +
+           (ell^2) * V["treatment:sust_literacy_binary","treatment:sust_literacy_binary"] +
+           2 * ell * V["treatment","treatment:sust_literacy_binary"]
+    se  <- sqrt(se2)
+    
+    lit_label <- ifelse(ell == 0, "Low", "High")
+    rows[[length(rows) + 1]] <-
+      data.frame(tau = taus[j], sust_literacy = factor(lit_label, levels = c("Low", "High")),
+                 estimate = eff, lo = eff - z*se, hi = eff + z*se)
+  }
+}
+df <- do.call(rbind, rows)
+
+# Plot
+p <- ggplot(df, aes(x = tau, y = estimate, color = sust_literacy, group = sust_literacy)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi, fill = sust_literacy), alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.6) +
+  geom_point(size = 1.6) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(breaks = taus) +
+  labs(title = "Conditional Quantile Treatment Effect\nby Sustainable Financial Knowledge",
+       x = "Quantile", y = "Treatment effect",
+       color = "Sustainable Financial\nKnowledge", fill = "Sustainable Financial\nKnowledge") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
+
+print(p)
+
+# Save as PNG
+ggsave("CQTE_by_sustlit.png", p, width = 8, height = 5.6, dpi = 300)
+
+
+########################## Conditional Quantile Treatment Effect (Sustainable preferences) ###############
+#############################################################################################################
+
+# Define quantiles
+taus <- seq(0.1, 0.9, by = 0.1)
+
+# Run quantile regression with sustainability preference interaction
+CQTE_sust_pref <- rq(inv_sustFund ~ treatment*sust_preference +
+                  age + gender_female + country + income + savings + debt +
+                  education + household + Household_n.Incomes,
+                tau = taus, data = data)
+
+# Get summary with bootstrap standard errors and covariance matrix
+sfm <- summary(CQTE_sust_pref, se = "boot", covariance = TRUE, R = 500)
+
+# Build effects for each sustainability preference level
+alpha <- 0.10
+z     <- qnorm(1 - alpha/2)
+levels_sp <- c(0, 1)  # Binary: Low (0) and High (1)
+
+rows <- list()
+for (j in seq_along(taus)) {
+  coefs <- sfm[[j]]$coefficients
+  V     <- sfm[[j]]$cov
+  
+  # Set dimnames if missing
+  if (is.null(dimnames(V))) {
+    dimnames(V) <- list(rownames(coefs), rownames(coefs))
+  }
+  
+  b_treat <- coefs["treatment", 1]
+  b_int   <- coefs["treatment:sust_preference", 1]
+
+  for (sp in levels_sp) {
+    eff <- b_treat + sp * b_int
+    se2 <- V["treatment","treatment"] +
+           (sp^2) * V["treatment:sust_preference","treatment:sust_preference"] +
+           2 * sp * V["treatment","treatment:sust_preference"]
+    se  <- sqrt(se2)
+    
+    pref_label <- ifelse(sp == 0, "Low", "High")
+    rows[[length(rows) + 1]] <-
+      data.frame(tau = taus[j], sust_preference = factor(pref_label, levels = c("Low", "High")),
+                 estimate = eff, lo = eff - z*se, hi = eff + z*se)
+  }
+}
+df <- do.call(rbind, rows)
+
+# Plot
+p <- ggplot(df, aes(x = tau, y = estimate, color = sust_preference, group = sust_preference)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi, fill = sust_preference), alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.6) +
+  geom_point(size = 1.6) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(breaks = taus) +
+  labs(title = "Conditional Quantile Treatment Effect\nby Sustainability Preference",
+       x = "Quantile", y = "Treatment effect",
+       color = "Sustainability\nPreference", fill = "Sustainability\nPreference") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
+
+print(p)
+
+# Save as PNG
+ggsave("CQTE_by_sustpref.png", p, width = 8, height = 5.6, dpi = 300)
