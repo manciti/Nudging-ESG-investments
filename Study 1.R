@@ -12,7 +12,7 @@ library(corrtable)
 library(marginaleffects)
 
 # Setting the working directory
-# setwd("C:/Users/mpasq/OneDrive - Università Politecnica delle Marche/Desktop/Dottorato/TESI/Capitolo 2/Analisi R/Directory")
+setwd("C:/Users/mpasq/Dropbox/Tesi Matteo/Investment Game/RICERCA Investment Game/Dati/Codice R/Directory")
 
 # import data frame from .csv file
 data <- read.csv("investData.csv")
@@ -230,17 +230,6 @@ t.test(datatreatment$debt, datacontrol$debt, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$household, datacontrol$household, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$Household_n.Incomes, datacontrol$Household_n.Incomes, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$education, datacontrol$education, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$fin_literacy, datacontrol$fin_literacy, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$sust_literacy, datacontrol$sust_literacy, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$experience, datacontrol$experience, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$investoryes, datacontrol$investoryes, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$advisor_reliance, datacontrol$advisor_reliance, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$owns_sustInvest, datacontrol$owns_sustInvest, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$past_sustInvest, datacontrol$past_sustInvest, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$risk_preference, datacontrol$risk_preference, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$time_preference, datacontrol$time_preference, var.equal = TRUE, conf.level=0.90)
-t.test(datatreatment$sust_preference, datacontrol$sust_preference, var.equal = TRUE, conf.level=0.90)
-
 
 ####################################################################
 #################### PART 4 - CORRELATIONS #########################
@@ -250,17 +239,19 @@ t.test(datatreatment$sust_preference, datacontrol$sust_preference, var.equal = T
 ##################################################################
 # creating a correlation matrix using only numerical variables (+ 'savings')
 data2 = select(data, -1, -inv_equityFundX, -inv_equityFundY, -inv_sustFund, -inv_bondFund, -country,
-               -owns_sustInvest, -past_sustInvest, -treatment, -adv_usefulness, -adv_trustworthiness, 
-               -trusting_Sustfunds, -sust_investPositive)
+               -owns_sustInvest, -past_sustInvest, -treatment, -adv_trustworthiness, -trusting_Sustfunds)
 
 data2 <- data2%>%
-  relocate(risk_preference, .after = sust_literacy)
+  relocate(sust_preference, .after = sust_literacy)
 
 data2 <- data2%>%
-  relocate(time_preference, .after = risk_preference)
+  relocate(experience, .after = time_preference)
 
 data2 <- data2%>%
-  relocate(sust_preference, .after = experience)
+  relocate(sust_investPositive, .after = experience)
+
+data2 <- data2%>%
+  relocate(advisor_reliance, .after = sust_investPositive)
 
 view(data2)
   
@@ -273,12 +264,6 @@ correlation.matrix <- cor(data2)
 correlation.matrix[upper.tri(correlation.matrix)] <- NA
 stargazer(correlation.matrix, title='correlation matrix', type='text', out = 'correlation.html')
 correlogram <- corrplot(correlation.matrix, tl.cex = 1, tl.col = 'black', tl.srt = 45, type = 'lower')
-
-# Correlation matrix only on investors
-data3 = subset(data2, investoryes == 1)
-data3 = select(data3, -investoryes)
-correlation_matrix(data3, digits=2, use = 'lower', show_significance = TRUE, replacement = " ")
-save_correlation_matrix(df = data3, filename = 'corrmatrix2.csv', digits = 2, use = 'lower',  show_significance = TRUE)
 
 ######## Subsitution Effect - measuring correlations ######
 ###########################################################
@@ -298,6 +283,7 @@ datainvestcontr <- select(datacontrol, 'inv_equityFundX', 'inv_bondFund', 'inv_e
 correlation_matrix(datainvestcontr, digits=2, use = 'lower', show_significance = TRUE, replacement = " ")
 save_correlation_matrix(df = datainvestcontr, filename = 'corrmatrixinvest2b.csv', digits = 2, use = 'lower',  show_significance = TRUE)
 
+# Average investment portfolios
 stargazer(datainvest, title ='Average Investment Portfolio Total Sample', type = 'text', digits = 2, out = 'Portfolio.html')
 stargazer(datainvesttreat, title ='Average Investment Portfolio Treatment Group', type = 'text', digits = 2, out = 'Portfolio.html')
 stargazer(datainvestcontr, title ='Average Investment Portfolio Control Group', type = 'text', digits = 2, out = 'Portfolio.html')
@@ -315,60 +301,23 @@ chisq.test(data$advisor_reliance, data$experience)
 ################ comparison of full models ###############
 #########################################################
 
-RegA <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy + risk_preference + time_preference + experience
-           + sust_preference + investoryes + advisor_reliance + treatment, data)
+RegA <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt + household + Household_n.Incomes
+           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
+           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
 
-RegB <- lm(inv_bondFund ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy + risk_preference + time_preference + experience
-           + sust_preference + investoryes + advisor_reliance + treatment, data)
+RegB <- lm(inv_bondFund ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
+           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
+           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
 
-RegC <- lm(inv_equityFundY ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy + risk_preference + time_preference + experience
-           + sust_preference + investoryes + advisor_reliance + treatment, data)
+RegC <- lm(inv_equityFundY ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
+           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
+           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
 
-RegD <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy + risk_preference + time_preference + experience
-           + sust_preference + investoryes + advisor_reliance + treatment, data)
+RegD <- lm(inv_sustFund ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
+           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
+           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
 
 stargazer(RegA, RegB, RegC, RegD, title = "Investors profile", type = "text", out = 'profiles.html')
-
-################## comparison of single models ############
-###########################################################
-
-# Sociodemographic variables
-Reg1 <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt
-           + education, data)
-Reg2 <- lm(inv_bondFund ~ age + gender_female + country + income + savings + debt
-           + education, data)
-Reg3 <- lm(inv_equityFundY ~ age + gender_female + country + income + savings + debt
-           + education, data)
-Reg4 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + education, data)
-stargazer(Reg1, Reg2, Reg3, Reg4, title = "Sociodemographic variables", type = "text", out = 'Sociodemographic variables.html')
-
-# Literacy variables
-Reg1 <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy, data)
-Reg2 <- lm(inv_bondFund ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy, data)
-Reg3 <- lm(inv_equityFundY ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy, data)
-Reg4 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + education + fin_literacy + sust_literacy, data)
-stargazer(Reg1, Reg2, Reg3, Reg4, title = "Literacy variables", type = "text", out = 'Literacy variables.html')
-
-# Investment profile
-Reg1 <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt
-           + education + risk_preference + time_preference + experience + sust_preference + investoryes + advisor_reliance, data)
-Reg2 <- lm(inv_bondFund ~ age + gender_female + country + income + savings + debt
-           + education + risk_preference + time_preference + experience + sust_preference + investoryes + advisor_reliance, data)
-Reg3 <- lm(inv_equityFundY ~ age + gender_female + country + income + savings + debt
-           + education + risk_preference + time_preference + experience + sust_preference + investoryes + advisor_reliance, data)
-Reg4 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + education + risk_preference + time_preference + experience + sust_preference + investoryes + advisor_reliance, data)
-stargazer(Reg1, Reg2, Reg3, Reg4, title = "Investment profile variables", type = "text", out = 'Investment profile variables.html')
-
 
 ###################################################################
 ################ PART 6 - ATE & CATE ESTIMATIONS ##################
@@ -397,29 +346,43 @@ stargazer(CATEPref, type = 'text', out = 'CATEPref.html')
 
 ################# ATE & CATE Plots #############
 # ATE Plot
-plot_predictions(ATE, by = "treatment") + ylab("% invested in sustainable fund") +
+plot_predictions(ATE, by = "treatment") + ylab("% Invested in the SI Fund") +
   xlab("Control group (0), Treated group (1)")
 
 # CATE Plots
 # Financial Literacy
-plot_predictions(CATEFin_literacy, by = c("fin_literacy", "treatment")) + ylab("% invested in sustainable fund") +
-  xlab("Financial Literacy")
+plot_predictions(CATEFin_literacy, by = c("fin_literacy", "treatment")) + ylab("% Invested in the SI Fund") +
+  xlab("Level of FL")
 
-# Sustainable Literacy
-plot_predictions(CATESust_literacy, by = c("sust_literacy", "treatment")) + ylab("% invested in sustainable fund") +
-  xlab("Sustainable Literacy")
+# Sustainable Knowledge
+plot_predictions(CATESust_literacy, by = c("sust_literacy", "treatment")) + ylab("% Invested in the SI Fund") +
+  xlab("Self-reported SFK")
 
 # Sustainable Preferences
-plot_predictions(CATEPref, by = c("sust_preference", "treatment")) + ylab("% invested in sustainable fund") +
-  xlab("Declared sustainable preferences")
+plot_predictions(CATEPref, by = c("sust_preference", "treatment")) + ylab("% Invested in the SI Fund") +
+  xlab("Declared Sustainable Preferences")
 
+############ Inserire variabili di controllo nell'analisi ATE e CATE ##################
+# ATE
+Reg1 <- lm(inv_sustFund ~ treatment, data)
+Reg2 <- lm(inv_sustFund ~ treatment + age + gender_female + country + income + savings + debt + household
+           + Household_n.Incomes + education, data)
+stargazer(Reg1, Reg2, title = "Treatment Effect", type = "text", out = 'Treatment_effect.html')
 
-########################################################
-###### PART 7 - MEDIATION EFFECTS  - PROCESS ANALYSIS###
-########################################################
-# process(data=data, y="inv_sustFund",x="fin_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
+# CATE FL e SFK
+Reg1 <- lm(inv_sustFund ~ treatment + fin_literacy + fin_literacy*treatment, data)
+Reg2 <- lm(inv_sustFund ~ treatment + sust_literacy + sust_literacy*treatment, data)
+Reg3 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt + household
+           + Household_n.Incomes + education + treatment + fin_literacy + fin_literacy*treatment, data)
+Reg4 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt + household
+           + Household_n.Incomes + education + treatment + sust_literacy + sust_literacy*treatment, data)
+stargazer(Reg1, Reg2, Reg3, Reg4, title = "Interaction with literacy", type = "text", out = 'Interaction_literacy.html')
 
-# process(data=data, y="inv_sustFund",x="sust_literacy", m=c("PCE","trust"), w="treatment", model=6, wmatrix=c(0,0,0,1,0,0))
+# CATE declared sustainable preferences
+Reg1 <- lm(inv_sustFund ~ treatment*sust_preference, data)
+Reg2 <- lm(inv_sustFund ~ treatment*sust_preference + age + gender_female + country + income + savings + debt + household
+           + Household_n.Incomes + education, data)
+stargazer(Reg1, Reg2, title = "Interaction with DSP", type = "text", out = 'Interaction_preference.html')
 
 ##########################################################
 ################## PART 8 - Perception of the advisor ####
@@ -428,23 +391,18 @@ plot_predictions(CATEPref, by = c("sust_preference", "treatment")) + ylab("% inv
 # Additional analysis on the possible interaction between treatment and perception of the advisor
 
 Reg1 <- lm(inv_sustFund ~ treatment + adv_usefulness + adv_usefulness*treatment, data)
-Reg2 <- lm(inv_sustFund ~ treatment + adv_trustworthiness + adv_trustworthiness*treatment, data)
-Reg3 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + household + Household_n.Incomes + education + treatment + adv_usefulness + adv_usefulness*treatment, data)
-Reg4 <- lm(inv_sustFund ~ age + gender_female + country + income + savings + debt
-           + household + Household_n.Incomes + education + treatment + adv_trustworthiness + adv_trustworthiness*treatment, data)
-stargazer(Reg1, Reg2, Reg3, Reg4, title = "Regression Output", type = "text", out = 'Interaction2.html')
-
-
+Reg2 <- lm(inv_sustFund ~ treatment + adv_usefulness + adv_usefulness*treatment + age + gender_female + country + income + savings + debt + household
+           + Household_n.Incomes + education, data)
+stargazer(Reg1, Reg2, title = "Regression Output", type = "text", out = 'Interaction_adv.usefulness.html')
 
 CATEadv_useful <- lm(inv_sustFund ~ treatment*adv_usefulness, data)
 
 plot_predictions(CATEadv_useful, by = c("adv_usefulness", "treatment")) + ylab("% Invested in Sustainable Fund") +
   xlab("Advisor Usefulness")
 
+
 ########################## Quantile Treatment Effect ########################################################
 #############################################################################################################
-
 
 #### Loading the relevant library
 library(quantreg)
@@ -479,6 +437,9 @@ dev.off()
 
 ########################## Conditional Quantile Treatment Effect (Financial Literacy) #######################
 #############################################################################################################
+# per creare la binary, dividiamo in base alla media di punteggio di financial literacy.
+summary(data$fin_literacy)
+# i valori sopra la media diventano "high FL".
 
 # Create binary financial literacy variable
 data <- data %>%
@@ -540,8 +501,8 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = fin_literacy, group = fin_lit
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
   labs(title = "Conditional Quantile Treatment Effect by Financial Literacy",
-       x = "Quantile", y = "Treatment effect",
-       color = "Financial literacy", fill = "Financial literacy") +
+       x = "Quantile", y = "Treatment Effect",
+       color = "Level of FL", fill = "Level of FL") +
   theme_minimal(base_size = 12)
 
 print(p)
@@ -551,7 +512,9 @@ ggsave("CQTE_by_finlit.png", p, width = 8, height = 5.6, dpi = 300)
 
 ########################## Conditional Quantile Treatment Effect (Sustainable financial knowledge) ##########
 #############################################################################################################
-
+# per creare la binary, dividiamo in base alla media di punteggio di financial literacy.
+summary(data$sust_literacy)
+# i valori sopra la media diventano "high SFK".
 
 # Create binary sustainable literacy variable
 data <- data %>%
@@ -612,9 +575,9 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = sust_literacy, group = sust_l
   geom_point(size = 1.6) +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
-  labs(title = "Conditional Quantile Treatment Effect\nby Sustainable Financial Knowledge",
-       x = "Quantile", y = "Treatment effect",
-       color = "Sustainable Financial\nKnowledge", fill = "Sustainable Financial\nKnowledge") +
+  labs(title = "Conditional Quantile Treatment Effect\nby Self-reported SFK",
+       x = "Quantile", y = "Treatment Effect",
+       color = "Self-reported SFK", fill = "Self-reported SFK") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
 
@@ -679,9 +642,9 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = sust_preference, group = sust
   geom_point(size = 1.6) +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
-  labs(title = "Conditional Quantile Treatment Effect\nby Sustainability Preference",
+  labs(title = "Conditional Quantile Treatment Effect\nby DSP",
        x = "Quantile", y = "Treatment effect",
-       color = "Sustainability\nPreference", fill = "Sustainability\nPreference") +
+       color = "DSP", fill = "DSP") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
 
@@ -689,3 +652,123 @@ print(p)
 
 # Save as PNG
 ggsave("CQTE_by_sustpref.png", p, width = 8, height = 5.6, dpi = 300)
+
+
+
+#######################################################################
+###### PART 7 - MEDIATION AND MODERATION EFFECTS  - PROCESS ANALYSIS###
+#######################################################################
+process(data = data, y="inv_sustFund", x="fin_literacy", m="sust_investPositive", w="treatment", model=5, intprobe=1,plot=1,seed=5123)
+process(data = data, y="inv_sustFund", x="sust_literacy", m="sust_investPositive", w="treatment", model=5, intprobe=1,plot=1,seed=5123)
+process(data = data, y="inv_sustFund", x="sust_preference", m="sust_investPositive", w="treatment", model=5, intprobe=1,plot=1,seed=5123)
+
+
+########################################################################
+####################### Analisi dati per decili #######################
+################### Da mettere nell'appendice (??) ####################
+########################## Analisi dati per decili ########################################################
+#############################################################################################################
+
+# distribuzione % investita nel fondo SI
+ggplot(data, aes(x = inv_sustFund)) + geom_histogram(binwidth = 0.5) 
+ggplot(data, aes(x = inv_sustFund)) + geom_density(fill = "lightgreen", alpha = 0.5)
+
+
+# sopra quale percentuale entriamo nel decimo quantile
+quantile(data$inv_sustFund, probs = 0.9, na.rm = TRUE)
+
+# estrarre e visualizzare partecipanti nella top 10%
+top10 <- data %>%
+  filter(inv_sustFund >= quantile(inv_sustFund, 0.9, na.rm = TRUE))
+
+summary(top10$inv_sustFund)
+nrow(top10)    
+
+# dividi gli investitori top10 dagli altri
+data <- data %>%
+  mutate(top10 = ifelse(inv_sustFund >= quantile(inv_sustFund, 0.9, na.rm = TRUE),
+                        "Top 10%", "Altri"))
+table(data$top10)
+
+#confronta FL top10 vs altri
+t.test(fin_literacy~ top10, data = data)
+t.test(sust_literacy~ top10, data = data)
+t.test(sust_preference~ top10, data = data)
+t.test(sust_investPositive~ top10, data = data)
+t.test(trusting_Sustfunds~ top10, data = data)
+
+#scattered box plot (lo tengo per sicurezza, ma il grafico più bello è quello sotto)
+ggplot(data, aes(x = fin_literacy, y = inv_sustFund)) +
+  geom_point(alpha = 0.5) +
+  geom_point(data = subset(data, top10 == "Top 10%"), color = "red") +
+  labs(title = "Financial Literacy e % investita (Top 10% evidenziati)",
+       x = "Financial Literacy", y = "Percentuale investita nel fondo sostenibile") +
+  theme_minimal()
+
+
+
+# dividiamo la percentuale investita nel fondo SI in decili
+data <- data %>%
+  mutate(decile = paste0("D", ntile(inv_sustFund, 10)))
+data$decile <- factor(data$decile, levels = paste0("D", 1:10))
+table(data$decile)
+
+############## grafici distribuzione variabili per decili dell'investimento sostenibile
+# financial literacy
+ggplot(data, aes(x = decile, y = fin_literacy)) +
+  geom_boxplot(fill = "lightgrey", outlier.shape = NA) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red") +
+  labs(title = "Distribuzione di FL per decile di investimento nel fondo SI",
+       x = "Decile della percentuale investita nel fondo SI",
+       y = "FL") +
+  theme_minimal()
+
+# sustainable finance knowledge
+ggplot(data, aes(x = decile, y = sust_literacy)) +
+  geom_boxplot(fill = "lightgrey", outlier.shape = NA) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red") +
+  labs(title = "Distribuzione di SFK per decile di investimento nel fondo SI",
+       x = "Decile della percentuale investita nel fondo SI",
+       y = "SFK") +
+  theme_minimal()
+
+# declared sustainable preferences
+ggplot(data, aes(x = decile, y = sust_preference)) +
+  geom_boxplot(fill = "lightgrey", outlier.shape = NA) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red") +
+  labs(title = "Distribuzione di DSP per decile di investimento nel fondo SI",
+       x = "Decile della percentuale investita nel fondo SI",
+       y = "DSP") +
+  theme_minimal() + 
+  theme(
+    plot.title.position = "plot",   # titolo relativo all'intero plot
+    plot.title = element_text(hjust = 0.3)  # più a sinistra
+  )
+
+# perceived effectiveness of SI
+ggplot(data, aes(x = decile, y = sust_investPositive)) +
+  geom_boxplot(fill = "lightgrey", outlier.shape = NA) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red") +
+  labs(title = "Distribuzione di perc. effect. per decile di investimento nel fondo SI",
+       x = "Decile della percentuale investita nel fondo SI",
+       y = "Perceived Effectiveness") +
+  theme_minimal() + 
+  theme(
+    plot.title.position = "plot",   # titolo relativo all'intero plot
+    plot.title = element_text(hjust = 0.0) # completamente a sinistra
+  )
+
+# trust in SI
+ggplot(data, aes(x = decile, y = trusting_Sustfunds)) +
+  geom_boxplot(fill = "lightgrey", outlier.shape = NA) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red") +
+  labs(title = "Distribuzione di trust per decile di investimento nel fondo SI",
+       x = "Decile della percentuale investita nel fondo SI",
+       y = "Trust") +
+  theme_minimal() + 
+  theme(
+    plot.title.position = "plot",   # titolo relativo all'intero plot
+    plot.title = element_text(hjust = 0.3)  # più a sinistra
+  )
+
+
