@@ -242,16 +242,19 @@ data2 = select(data, -1, -inv_equityFundX, -inv_equityFundY, -inv_sustFund, -inv
                -owns_sustInvest, -past_sustInvest, -treatment, -adv_trustworthiness, -trusting_Sustfunds)
 
 data2 <- data2%>%
-  relocate(sust_preference, .after = sust_literacy)
+  relocate(investoryes, .after = sust_literacy)
 
 data2 <- data2%>%
-  relocate(experience, .after = time_preference)
+  relocate(risk_preference, .after = investoryes)
 
 data2 <- data2%>%
-  relocate(sust_investPositive, .after = experience)
+  relocate(time_preference, .after = risk_preference)
 
 data2 <- data2%>%
-  relocate(advisor_reliance, .after = sust_investPositive)
+  relocate(sust_preference, .after = experience)
+
+data2 <- data2%>%
+  relocate(sust_investPositive, .after = advisor_reliance)
 
 view(data2)
   
@@ -302,20 +305,20 @@ chisq.test(data$advisor_reliance, data$experience)
 #########################################################
 
 RegA <- lm(inv_equityFundX ~ age + gender_female + country + income + savings + debt + household + Household_n.Incomes
-           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
-           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
+           + education + fin_literacy + sust_literacy + investoryes + risk_preference + time_preference 
+           + experience + sust_preference + advisor_reliance + sust_investPositive, data)
 
 RegB <- lm(inv_bondFund ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
-           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
-           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
+           + education + fin_literacy + sust_literacy + investoryes + risk_preference + time_preference 
+           + experience + sust_preference + advisor_reliance + sust_investPositive, data)
 
 RegC <- lm(inv_equityFundY ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
-           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
-           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
+           + education + fin_literacy + sust_literacy + investoryes + risk_preference + time_preference 
+           + experience + sust_preference + advisor_reliance + sust_investPositive, data)
 
 RegD <- lm(inv_sustFund ~  age + gender_female + country + income + savings + debt + household + Household_n.Incomes
-           + education + fin_literacy + sust_literacy + sust_preference + investoryes 
-           + risk_preference + time_preference + experience + sust_investPositive + advisor_reliance, data)
+           + education + fin_literacy + sust_literacy + investoryes + risk_preference + time_preference 
+           + experience + sust_preference + advisor_reliance + sust_investPositive, data)
 
 stargazer(RegA, RegB, RegC, RegD, title = "Investors profile", type = "text", out = 'profiles.html')
 
@@ -352,7 +355,7 @@ plot_predictions(ATE, by = "treatment") + ylab("% Invested in the SI Fund") +
 # CATE Plots
 # Financial Literacy
 plot_predictions(CATEFin_literacy, by = c("fin_literacy", "treatment")) + ylab("% Invested in the SI Fund") +
-  xlab("Level of FL")
+  xlab("Level of Financial Literacy")
 
 # Sustainable Knowledge
 plot_predictions(CATESust_literacy, by = c("sust_literacy", "treatment")) + ylab("% Invested in the SI Fund") +
@@ -360,7 +363,7 @@ plot_predictions(CATESust_literacy, by = c("sust_literacy", "treatment")) + ylab
 
 # Sustainable Preferences
 plot_predictions(CATEPref, by = c("sust_preference", "treatment")) + ylab("% Invested in the SI Fund") +
-  xlab("Declared Sustainable Preferences")
+  xlab("Declared Sustainability Preferences")
 
 ############ Inserire variabili di controllo nell'analisi ATE e CATE ##################
 # ATE
@@ -418,7 +421,7 @@ QTE_full <- rq(inv_sustFund ~ treatment +
 
 # We visualize the quantile treatment effect across the full quantile range
 plot(summary(QTE_full), parm = "treatment", 
-     main = "Treatment Effect Across Quantiles",
+     main = "",
      ylab = "Treatment Coefficient",
      xlab = "Quantile")
 
@@ -428,7 +431,7 @@ title(xlab = "Quantile", ylab = "Treatment Coefficient")
 # Save the same plot as a high-resolution PNG in the project folder
 png(filename = "QTE_results.png", width = 2000, height = 1400, res = 300)
 plot(summary(QTE_full), parm = "treatment", 
-  main = "Treatment Effect Across Quantiles",
+  main = "",
   ylab = "Treatment Coefficient",
   xlab = "Quantile")
 title(xlab = "Quantile", ylab = "Treatment Coefficient")
@@ -500,9 +503,8 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = fin_literacy, group = fin_lit
   geom_point(size = 1.6) +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
-  labs(title = "Conditional Quantile Treatment Effect by Financial Literacy",
-       x = "Quantile", y = "Treatment Effect",
-       color = "Level of FL", fill = "Level of FL") +
+  labs(x = "Quantile", y = "Treatment Effect",
+       color = "Financial Literacy", fill = "Financial Literacy") +
   theme_minimal(base_size = 12)
 
 print(p)
@@ -575,8 +577,7 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = sust_literacy, group = sust_l
   geom_point(size = 1.6) +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
-  labs(title = "Conditional Quantile Treatment Effect\nby Self-reported SFK",
-       x = "Quantile", y = "Treatment Effect",
+  labs(x = "Quantile", y = "Treatment Effect",
        color = "Self-reported SFK", fill = "Self-reported SFK") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
@@ -627,9 +628,9 @@ for (j in seq_along(taus)) {
            2 * sp * V["treatment","treatment:sust_preference"]
     se  <- sqrt(se2)
     
-    pref_label <- ifelse(sp == 0, "Low", "High")
+    pref_label <- ifelse(sp == 0, "Negative", "Positive")
     rows[[length(rows) + 1]] <-
-      data.frame(tau = taus[j], sust_preference = factor(pref_label, levels = c("Low", "High")),
+      data.frame(tau = taus[j], sust_preference = factor(pref_label, levels = c("Negative", "Positive")),
                  estimate = eff, lo = eff - z*se, hi = eff + z*se)
   }
 }
@@ -642,9 +643,8 @@ p <- ggplot(df, aes(x = tau, y = estimate, color = sust_preference, group = sust
   geom_point(size = 1.6) +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = taus) +
-  labs(title = "Conditional Quantile Treatment Effect\nby DSP",
-       x = "Quantile", y = "Treatment effect",
-       color = "DSP", fill = "DSP") +
+  labs(x = "Quantile", y = "Treatment Effect",
+       color = "Sustainability Preferences", fill = "Sustainability Preferences") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5, size = 18, lineheight = 1.1))
 
