@@ -230,6 +230,7 @@ t.test(datatreatment$debt, datacontrol$debt, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$household, datacontrol$household, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$Household_n.Incomes, datacontrol$Household_n.Incomes, var.equal = TRUE, conf.level=0.90)
 t.test(datatreatment$education, datacontrol$education, var.equal = TRUE, conf.level=0.90)
+t.test(datatreatment$adv_usefulness, datacontrol$adv_usefulness, var.equal = TRUE, conf.level=0.90)
 
 ####################################################################
 #################### PART 4 - CORRELATIONS #########################
