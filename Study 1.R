@@ -1,6 +1,8 @@
-###############################
-####### Analysis Code ########
-###############################
+##########################################################################################################
+####### Caterina Lucarelli, Matteo Pasquino & Manuele Citi ###############################################
+####### Nudging ESG Investments: Evidence From an Investment Game Experiment ############################ 
+####### R script for data handling and analysis ##########################################################
+##########################################################################################################
 
 library(tidyverse)
 library(ggplot2)
@@ -12,7 +14,7 @@ library(corrtable)
 library(marginaleffects)
 
 # Setting the working directory
-setwd("C:/Users/mpasq/Dropbox/Tesi Matteo/Investment Game/RICERCA Investment Game/Dati/Codice R/Directory")
+setwd("YOUR_WORKING_DIRECTORY")
 
 # import data frame from .csv file
 data <- read.csv("investData.csv")
@@ -88,7 +90,7 @@ data <- data%>%
                               '<10% of income' ~ 10,
                               '10-30% of income' ~ 20,
                               '>30% of income' ~ 30))
-# it can't convert '>30% of income' into 30, so i'll replace na values with 30 manually
+# it can't convert '>30% of income' into 30, so we replace na values with 30 manually
 data$savings[is.na(data$savings)] <- 30
 
 # Debt
