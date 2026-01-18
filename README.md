@@ -1,2 +1,2 @@
 # Nudging-ESG-investments
-This is the R code for the paper "Nudging ESG investments via digital financial advising. Evidence from an investment game experiment". Forthcoming in "Business Strategy and the Environment" (2026).
+This is the full R script for the paper "Nudging ESG Investments Via Digital Financial Advising. Evidence From an Investment Game Experiment" by Caterina Lucarelli, Matteo Pasquino & Manuele Citi. Forthcoming in "Business Strategy and the Environment" (2026).
