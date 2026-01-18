@@ -1,2 +1,2 @@
 # Nudging-ESG-investments
-This is the R code for the paper "Nudging ESG investments via digital financial advising. Evidence from an investment game experiment"
+This is the R code for the paper "Nudging ESG investments via digital financial advising. Evidence from an investment game experiment". Forthcoming in "Business Strategy and the Environment" (2026).
